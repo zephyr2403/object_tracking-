@@ -71,7 +71,13 @@ sift = cv2.xfeatures2d.SIFT_create()
 
 objectKeypts, objectDesc = sift.detectAndCompute(gObject,None)#None=Mask
 
-
+indexParams = dict(algorithm=0,trees=5)
+searchParams = dict()
+    
+flann = cv2.FlannBasedMatcher(
+    indexParams,
+    searchParams
+)
 
 while True:
 
@@ -90,7 +96,24 @@ while True:
     cv2.imshow('View Object Key Points',viewobjectKeypts)
     """
 
-  
+    ''' FEATURE MATCHING '''
+
+    matches = flann.knnMatch(objectDesc,gFrameDesc,k=2)
+
+    goodMatches = []
+
+    for a,b in matches:
+        if a.distance < b.distance * .8:
+            goodMatches.append(a)
+
+    matchImg = cv2.drawMatches(
+    gObject,
+    objectKeypts,
+    gFrame,
+    gFrameKeypts,
+    goodMatches,
+    gFrame
+    )    
 
     #Uncomment to see the matched features
     cv2.imshow('Matches',matchImg)
