@@ -116,8 +116,28 @@ while True:
     )    
 
     #Uncomment to see the matched features
-    cv2.imshow('Matches',matchImg)
+    #cv2.imshow('Matches',matchImg)
     
+    ''' HOMOGRAPHY '''
+
+    if len(goodMatches) > 10 :
+        object_pts = np.float32([objectKeypts[p.queryIdx].pt for p in goodMatches]).reshape(-1,1,2)
+        frame_pts = np.float32([gFrameKeypts[p.trainIdx].pt for p in goodMatches]).reshape(-1,1,2)
+
+        matrix, mask = cv2.findHomography(object_pts,frame_pts,cv2.RANSAC,5.0)
+        matchesMask = mask.ravel().tolist()
+
+        h,w = gObject.shape
+        pts = np.float32([[0,0],[0,h],[w,h],[w,0]]).reshape(-1,1,2)
+
+        prep = cv2.perspectiveTransform(pts,matrix)
+
+        tracking = cv2.polylines(frame,[np.int32(prep)],True,(123,123,123),3)
+        cv2.imshow('Tracking',tracking)
+    else:
+        cv2.imshow('Tracking',frame)
+
+
     k = cv2.waitKey(1)
     #Break when Esc is pressed
     if k==27:
